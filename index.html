@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Tracker & Calendar</title>
+    <style>
+        :root {
+            --maroon-dark: #5c0612;
+            --maroon-main: #800020;
+            --maroon-light: #a31d37;
+            --yellow-bright: #ffcc00;
+            --yellow-pale: #fffde6;
+            --yellow-accent: #f4b400;
+            --bg-white: #fbfbfb;
+            --text-dark: #2b1115;
+            --text-muted: #665255;
+            --success: #2a9d8f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--yellow-pale);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 950px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        /* Sidebar Form Styles */
+        .sidebar {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(128, 0, 32, 0.08);
+            border-top: 5px solid var(--maroon-main);
+            height: fit-content;
+        }
+
+        h2 { 
+            margin-top: 0; 
+            color: var(--maroon-main); 
+            font-size: 1.5em;
+            border-bottom: 2px solid var(--yellow-bright);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--maroon-dark);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2d6d8;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95em;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--maroon-main);
+            background-color: #fffdec;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { 
+            background-color: var(--maroon-main); 
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn-primary:hover { 
+            background-color: var(--maroon-dark); 
+            transform: translateY(-1px);
+        }
+        .btn-secondary { 
+            background-color: #e2d6d8; 
+            color: var(--text-dark); 
+            display: none; 
+        }
+        .btn-secondary:hover { 
+            background-color: #d1bfc2; 
+        }
+
+        /* Alert Message Styles */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: bold;
+            font-size: 0.9em;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        .alert-danger { 
+            background-color: #fff0f2; 
+            color: #b3001b; 
+            border: 1px solid #ffccd3; 
+        }
+        .alert-success { 
+            background-color: #e8f8f5; 
+            color: var(--success); 
+            border: 1px solid #c3ece5; 
+        }
+
+        /* Calendar Styles */
+        .main-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(128, 0, 32, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .calendar-header h2 {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .calendar-header button { 
+            width: auto; 
+            padding: 8px 16px; 
+            background-color: var(--maroon-main); 
+            color: white;
+        }
+        .calendar-header button:hover {
+            background-color: var(--maroon-dark);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 8px;
+            width: 100%;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 700;
+            background-color: var(--maroon-main);
+            color: var(--yellow-bright);
+            padding: 12px 0;
+            border-radius: 6px;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .day {
+            height: 125px;
+            border: 1px solid #ebd9dc;
+            border-radius: 6px;
+            padding: 8px;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-sizing: border-box;
+            transition: background-color 0.2s;
+        }
+        .day:hover {
+            background-color: #fffdf7;
+        }
+
+        .day::-webkit-scrollbar {
+            width: 4px;
+        }
+        .day::-webkit-scrollbar-thumb {
+            background: #d4bec2;
+            border-radius: 2px;
+        }
+
+        .day-number {
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .day.empty { 
+            background-color: #f7f3f4; 
+            border-color: #f0e6e8;
+        }
+        .day.today { 
+            border: 2.5px solid var(--yellow-accent); 
+            background-color: #fffbe6;
+        }
+        .day.today .day-number {
+            color: var(--maroon-main);
+        }
+
+        /* Highly Legible Academic Badges */
+        .event-badge {
+            font-size: 0.72em;
+            font-weight: 600;
+            padding: 5px 6px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .badge-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 4px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .action-icon {
+            background: rgba(255, 255, 255, 0.22);
+            color: white;
+            border: none;
+            padding: 2px 4px;
+            font-size: 1em;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            line-height: 1;
+            transition: background 0.15s;
+        }
+        .action-icon:hover {
+            background: rgba(255, 255, 255, 0.45);
+        }
+
+        /* Custom Category Color Mapping under new Scheme */
+        .event-class { background-color: var(--maroon-light); color: white; }
+        .event-quiz { background-color: #df8a00; color: white; } /* Darker golden yellow for readability */
+        .event-exam { background-color: #b3001b; color: white; } /* Deep deep red */
+        .event-reporting { background-color: #1e7a6e; color: white; } /* Subdued teal for distinction */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Left Column: Input Form -->
+    <div class="sidebar">
+        <h2 id="formTitle">Add Schedule</h2>
+        <div id="alertBox" class="alert"></div>
+        
+        <form id="academicForm">
+            <input type="hidden" id="editIndex" value="">
+
+            <div class="form-group">
+                <label for="studentName">Student Information</label>
+                <input type="text" id="studentName" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <label for="courseName">Course/Subject</label>
+                <input type="text" id="courseName" placeholder="e.g., Soil Mechanics" required>
+            </div>
+            <div class="form-group">
+                <label for="eventType">Schedule Type</label>
+                <select id="eventType" required>
+                    <option value="class">Regular Class</option>
+                    <option value="quiz">Quiz</option>
+                    <option value="exam">Exam</option>
+                    <option value="reporting">Reporting</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="eventDate">Date</label>
+                <input type="date" id="eventDate" required>
+            </div>
+            <div class="form-group">
+                <label for="startTime">Start Time</label>
+                <input type="time" id="startTime" step="60" required>
+            </div>
+            <div class="form-group">
+                <label for="endTime">End Time</label>
+                <input type="time" id="endTime" step="60" required>
+            </div>
+            
+            <div class="btn-group">
+                <button type="submit" id="submitBtn" class="btn-primary">Add to Schedule</button>
+                <button type="button" id="cancelEditBtn" class="btn-secondary">Cancel Edit</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Right Column: Monthly Calendar Grid -->
+    <div class="main-content">
+        <div class="calendar-header">
+            <button id="prevMonth" class="btn-primary">&lt; Prev</button>
+            <h2 id="monthYearTitle">Month Year</h2>
+            <button id="nextMonth" class="btn-primary">Next &gt;</button>
+        </div>
+        
+        <div class="calendar-grid" id="calendarGrid">
+            <!-- Weekdays Headers -->
+            <div class="weekday">Sun</div>
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+            <!-- Days will be dynamically injected here by JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+    let events = JSON.parse(localStorage.getItem('academicEvents')) || [];
+    let currentDate = new Date();
+
+    const form = document.getElementById('academicForm');
+    const formTitle = document.getElementById('formTitle');
+    const editIndexField = document.getElementById('editIndex');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const alertBox = document.getElementById('alertBox');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const monthYearTitle = document.getElementById('monthYearTitle');
+
+    function formatTime12Hour(timeStr) {
+        if(!timeStr) return '';
+        let [hours, minutes] = timeStr.split(':');
+        hours = parseInt(hours);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        return `${hours}:${minutes} ${ampm}`;
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('studentName').value;
+        const course = document.getElementById('courseName').value;
+        const type = document.getElementById('eventType').value;
+        const date = document.getElementById('eventDate').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const currentEditIndex = editIndexField.value;
+
+        if (startTime >= endTime) {
+            showAlert("Error: End time must be strictly after the start time.", "danger");
+            return;
+        }
+
+        let hasOverlap = false;
+        let conflictingEvent = null;
+
+        for (let i = 0; i < events.length; i++) {
+            if (currentEditIndex !== "" && i === parseInt(currentEditIndex)) {
+                continue;
+            }
+
+            let existingEvent = events[i];
+
+            if (existingEvent.date === date) {
+                if (startTime < existingEvent.endTime && endTime > existingEvent.startTime) {
+                    hasOverlap = true;
+                    conflictingEvent = existingEvent;
+                    break;
+                }
+            }
+        }
+
+        if (hasOverlap) {
+            const displayStart = formatTime12Hour(conflictingEvent.startTime);
+            const displayEnd = formatTime12Hour(conflictingEvent.endTime);
+            showAlert(`⚠️ SCHEDULE OVERLAP! "${course}" conflicts with existing "${conflictingEvent.course}" (${displayStart} - ${displayEnd})`, "danger");
+            return; 
+        }
+
+        const targetEventData = { name, course, type, date, startTime, endTime };
+
+        if (currentEditIndex !== "") {
+            events[currentEditIndex] = targetEventData;
+            showAlert("Schedule successfully updated!", "success");
+            resetFormState();
+        } else {
+            events.push(targetEventData);
+            showAlert("Schedule successfully added!", "success");
+            form.reset();
+            document.getElementById('studentName').value = name;
+        }
+
+        localStorage.setItem('academicEvents', JSON.stringify(events));
+        currentDate = new Date(date); 
+        renderCalendar();
+    });
+
+    window.editEvent = function(globalIndex) {
+        const ev = events[globalIndex];
+        
+        formTitle.textContent = "Edit Schedule";
+        editIndexField.value = globalIndex;
+        submitBtn.textContent = "Save Changes";
+        cancelEditBtn.style.display = "block";
+
+        document.getElementById('studentName').value = ev.name;
+        document.getElementById('courseName').value = ev.course;
+        document.getElementById('eventType').value = ev.type;
+        document.getElementById('eventDate').value = ev.date;
+        document.getElementById('startTime').value = ev.startTime;
+        document.getElementById('endTime').value = ev.endTime;
+        
+        alertBox.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.deleteEvent = function(globalIndex) {
+        const ev = events[globalIndex];
+        if (confirm(`Are you sure you want to delete "${ev.course} (${ev.type})"?`)) {
+            events.splice(globalIndex, 1);
+            localStorage.setItem('academicEvents', JSON.stringify(events));
+            
+            if (editIndexField.value === String(globalIndex)) {
+                resetFormState();
+            } else if (editIndexField.value !== "" && parseInt(editIndexField.value) > globalIndex) {
+                editIndexField.value = String(parseInt(editIndexField.value) - 1);
+            }
+            
+            showAlert("Schedule removed successfully.", "success");
+            renderCalendar();
+        }
+    }
+
+    cancelEditBtn.addEventListener('click', resetFormState);
+
+    function resetFormState() {
+        form.reset();
+        formTitle.textContent = "Add Schedule";
+        editIndexField.value = "";
+        submitBtn.textContent = "Add to Schedule";
+        cancelEditBtn.style.display = "none";
+    }
+
+    function showAlert(message, type) {
+        alertBox.textContent = message;
+        alertBox.className = `alert alert-${type}`;
+        alertBox.style.with = '100%';
+        alertBox.style.display = 'block';
+        if(type === 'success') {
+            setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+        }
+    }
+
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        monthYearTitle.textContent = `${monthNames[month]} ${year}`;
+
+        const weekdays = calendarGrid.querySelectorAll('.weekday');
+        calendarGrid.innerHTML = '';
+        weekdays.forEach(day => calendarGrid.appendChild(day));
+
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstDayIndex; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'day empty';
+            calendarGrid.appendChild(emptyCell);
+        }
+
+        for (let day = 1; day <= totalDays; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'day';
+            
+            const currentStringDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            const today = new Date();
+            if(day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                dayCell.classList.add('today');
+            }
+
+            dayCell.innerHTML = `<span class="day-number">${day}</span>`;
+
+            const mappedEvents = events.map((ev, index) => ({ ...ev, originalIndex: index }));
+            const dayEvents = mappedEvents.filter(e => e.date === currentStringDate)
+                                          .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+            dayEvents.forEach(ev => {
+                const badge = document.createElement('div');
+                badge.className = `event-badge event-${ev.type}`;
+                
+                const displayTime = formatTime12Hour(ev.startTime);
+                badge.title = `${ev.course} (${ev.type.toUpperCase()})
+Time: ${displayTime} - ${formatTime12Hour(ev.endTime)}
+Student: ${ev.name}`;
+                
+                badge.innerHTML = `
+                    <span class="badge-text">[${displayTime}] ${ev.course}</span>
+                    <div class="action-btns">
+                        <button type="button" class="action-icon" onclick="event.stopPropagation(); editEvent(${ev.originalIndex});" title="Edit">✎</button>
+                        <button type="button" class="action-icon" onclick="event.stopPropagation(); deleteEvent(${ev.originalIndex});" title="Delete">×</button>
+                    </div>
+                `;
+                
+                dayCell.appendChild(badge);
+            });
+
+            calendarGrid.appendChild(dayCell);
+        }
+    }
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    });
+
+    renderCalendar();
+</script>
+
+</body>
+</html>
